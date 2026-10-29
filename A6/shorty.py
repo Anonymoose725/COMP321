@@ -8,13 +8,14 @@ import sys
 import heapq # max heap
 
 
-def solve(n, adj):
+def get_shorty(n, adj):
     # TODO 1: best = list of n floats, all 0.0, except best[0] = 1.0
+    best = [0.0] * n
+    best[0] = 1.0 # full size initially
 
-    # TODO 2: heap = [(-1.0, 0)]
-    #         heapq is a MIN-heap, so store the NEGATED size:
-    #         the most negative value (= the largest size) comes out first.
-
+    pq = [(-1.0, 0)] # negate to make a max heap. grabbing minimum grabs -(maximum)
+    heapq.heapify(pq) # turns the list pq into a max heap
+    
     # TODO 3: while heap is non-empty:
     #   - pop (neg_size, u) with heapq.heappop, and set size = -neg_size
     #   - if size < best[u]: stale entry, continue
@@ -24,8 +25,18 @@ def solve(n, adj):
     #             best[v] = candidate
     #             heapq.heappush(heap, (-candidate, v))
 
-    # TODO 4: return best[n - 1]
-    return 0.0
+    while pq:
+        size_neg, u = heapq.heappop(pq) # greedy choice
+        size = -size_neg
+        if size < best[u]: continue # ignore
+        
+        for (v, f) in adj[u]: # v neighbours, relaxing
+            cur = best[u] * f
+            if cur > best[v]:
+                best[v] = cur
+                heapq.heappush(pq, (-cur, v))
+
+    return best[n-1]
 
 
 def main():
@@ -40,20 +51,20 @@ def main():
         if n == 0 and m == 0: # indicates final test, not to be processed
             break
 
-        adj = [[] for _ in range(n)]
+        adj = [[] for _ in range(n)] # n "intersections" ie nodes
 
         for _ in range(m):
             x = int(data[pos])
             y = int(data[pos + 1])
             f = float(data[pos + 2])
             pos += 3
-            # TODO 6: undirected graph, so append (y, f) to adj[x]
-            #         AND (x, f) to adj[y]
 
-        result = solve(n, adj)
-        result.append(f"{result:.4f}")
+            adj[x].append((y, f))
+            adj[y].append((x, f)) # undirected so we take both
+
+        best = get_shorty(n, adj)
+        result.append(f"{best:.4f}")
 
     print("\n".join(result))
-
 
 main()
