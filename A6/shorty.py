@@ -9,21 +9,11 @@ import heapq # max heap
 
 
 def get_shorty(n, adj):
-    # TODO 1: best = list of n floats, all 0.0, except best[0] = 1.0
     best = [0.0] * n
     best[0] = 1.0 # full size initially
 
     pq = [(-1.0, 0)] # negate to make a max heap. grabbing minimum grabs -(maximum)
     heapq.heapify(pq) # turns the list pq into a max heap
-    
-    # TODO 3: while heap is non-empty:
-    #   - pop (neg_size, u) with heapq.heappop, and set size = -neg_size
-    #   - if size < best[u]: stale entry, continue
-    #   - for (v, f) in adj[u]:
-    #         candidate = best[u] * f
-    #         if candidate > best[v]:
-    #             best[v] = candidate
-    #             heapq.heappush(heap, (-candidate, v))
 
     while pq:
         size_neg, u = heapq.heappop(pq) # greedy choice
