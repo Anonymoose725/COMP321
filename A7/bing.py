@@ -1,4 +1,4 @@
-# this is a trie problem, stroing character by character
+# this is a trie problem, storing character by character
 # traverse each char in the word
 # if a node doesnt exist, create it
 # when reaching final character, retrieve a counter
