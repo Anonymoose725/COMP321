@@ -404,8 +404,6 @@ def convex_hull(pts):
 3. Stack `S = [p0]`; for each `p` pop while the last two and `p` are not a left turn (`ccw(S[-2], S[-1], p) <= 0`), then push `p`.
 4. `S` is the hull in CCW order.
 
-The slide's `p[1]/p[0]` divides by zero for points directly above `p0` and has no collinear tie-break, so sort with the cross product. `<= 0` drops collinear boundary points; use `< 0` to keep them.
-
 ```python
 from functools import cmp_to_key
 
