@@ -1,6 +1,4 @@
-# Computational Geometry Cheat Sheet (COMP 321, L15 + L16): Python
-
-Contents: 0 Rules · 1 Primitives · 2 Dot/cross · 3 Lines · 4 Triangles · 5 Circles · 6 Polygons · 7 Segment intersection · 8 Convex hull · 9 Sweep line · 10 Kattis worked problems · 11 Edge cases · Index
+# Contest 3 Sheet (COMP321): Python
 
 Points are tuples `(x, y)`; use **ints whenever the input is integer**. All code was run against brute-force checks or the Kattis samples.
 
@@ -630,6 +628,89 @@ Sample `3 2.5 3` gives `0.999173 1.533202 0.995436 0.929975 1.185867 0.904840` (
 - Output: enough digits (`f"{ans:.6f}"` or more); avoid `-0.000000` (add `+ 0.0` or check `abs(ans) < 1e-12`).
 
 ---
+
+## 12. Algebra
+
+### 12.1. GCD, LCM
+
+GCD(x, y) = greatest integer s.t. d | x and d | y. We use the fact that gcd(a, b) = gcd(a, b % a)
+
+```python
+def gcd(a, b):
+    while b:
+        r = a % b; a = b; b = r
+    return a
+```
+
+LCM(x, y) = smallest positive integer L s.t. a | L and b | L
+
+```python
+def lcm(a, b): return a * (b / gcd(a, b))
+```
+
+### 12.2. Modulo and Field Identities
+
+Bezout's Identity gauruntees for any integers a,b there exists integers x, y s.t. ax + by = gcd(a, b).
+Computed by the extended Euclidean algorithm, GCD but with carrying results.
+
+```python
+def EE(a: int, b: int):
+    """Returns d = gcd(x, y)"""
+    if b == 0:
+        return (a, 1, 0) # (d, x, y)
+    d, x0, y = EE(b, a % b)
+    return (d, y, x0-y*(a//b))
+```
+
+### 12.3. Fermat's Little, Fast Exponentiation
+
+Exponentiation can be computed quickly by divide and conquer
+
+```python
+def pow(a, n): 
+    if n < 0: return 1 / pow(a, -n)
+    if n == 0: return 1
+    if n == 1: return a
+    t = pow(a, n//2)
+    return t * t * (a if n % 2 == 1 else 1)
+```
+
+## 13. Number Theory
+
+### 13.1. Primes
+
+P is prime i.f.f. only 1 | p and p | p.
+Can generate a list of primes between [0,...,N] with Sieve of Eratosthenes
+
+```python
+def primes(n: int) -> list[int]: # roughly O(Nlog(log(N))
+    """Iteratively mark multiples of each prime as composite, starting with 2"""
+    if n < 2:
+        return []
+    is_prime = [True] * (n+1)
+    is_prime[0] = is_prime[1] = False
+    for p in range(2, math.isqrt(n)+1):
+        if is_prime[p]:
+            for multiple in range(p*p, n+1, p):
+                is_prime[multiple] = False
+    return [num for num, prime in enumerate(is_prime) if prime]
+
+def reseto(n, k) -> list[int]:
+    """Return the k-th crossed out number in Sieve between 1 <= N <= 10^7"""
+    count = 0
+    crossed_out = [False] * (n+1)
+    
+    for p in range(2, n+1):
+        if not crossed_out[p]:
+            for multiple in range(p, n+1, p): # start at p instead of p*p so p itself is crossed out
+                if not crossed_out[multiple]:
+                    crossed_out[multiple] = True
+                    count += 1
+                    if count == k:
+                        return multiple
+    return -1 # something went wrong!
+```
+
 
 ## Quick function index
 
