@@ -683,7 +683,7 @@ P is prime i.f.f. only 1 | p and p | p.
 Can generate a list of primes between [0,...,N] with Sieve of Eratosthenes
 
 ```python
-def primes(n: int) -> list[int]: # roughly O(Nlog(log(N))
+def get_primes(n: int) -> list[int]: # roughly O(Nlog(log(N))
     """Iteratively mark multiples of each prime as composite, starting with 2"""
     if n < 2:
         return []
@@ -711,6 +711,129 @@ def reseto(n, k) -> list[int]:
     return -1 # something went wrong!
 ```
 
+All composites can be written as a factor of primes
+
+```python
+def num_PF(n):
+    """Count the number of prime factors of n"""
+    primes = get_primes(n)
+    PF_idx = 0
+    PF = primes[PF_idx]
+    ans = 0
+    while PF * PF <= n:
+        while n % PF == 0:
+            n //= PF
+            ans += 1
+        PF_idx += 1
+        PF = primes[PF_idx]
+    if n != 1: ans += 1
+    return ans
+```
+
+## 14. Combinatorics + Game Theory
+
+Questions like "how many ways" and numerical equivalencies.
+
+- **Sequence:** $f_0 = 0, f_1 = 1, f_n = f_{n-1} + f_{n-2}$ ($0, 1, 1, 2, 3, 5, 8, 13, \dots$).
+- **Equivalences (shifted by 1, $A_n = f_{n+1}$):** ways to tile a $2 \times n$ board with $2 \times 1$ dominoes; ways to reach square $n$ taking steps of $1$ or $2$ (1D hopscotch).
+- **Complexity:** Avoid $O(2^n)$ recursion. Use $O(n)$ DP ($O(1)$ space) for $n \le 10^6$, or $O(\log n)$ matrix/fast-doubling when $n \le 10^{18}$ (e.g. $2^{30}$).
+
+### 14.1 Counting and Fib
+
+```python
+def fib(n):
+    """O(n) time, O(1) space -> n-th Fibonacci (0-indexed: fib(0)=0, fib(1)=1)."""
+    if n <= 1: return n
+    a, b = 0, 1
+    for _ in range(n - 1):
+        a, b = b, a + b
+    return b
+
+def fib_fast(n, mod=None): # uses matrix equivalences
+    """O(log n) fast doubling -> (F_n, F_{n+1}). Pass mod for large n."""
+    def _helper(k: int, mod=None) -> tuple[int, int]:
+        if k == 0: return (0, 1)
+        a, b = _helper(k >> 1, mod)
+        c = a * (2 * b - a)
+        d = a * a + b * b
+        if mod: c %= mod; d %= mod
+        return (d, c + d) if (k & 1) else (c, d)
+    return _helper(n, mod)[0]
+```
+
+### 14.2 Binomial Coefficients & Identities
+
+- **Choose $k$ from $n$ (unordered):** $\binom{n}{k} = \frac{n!}{k!(n-k)!} = \binom{n}{n-k}$, with $\binom{n}{0} = \binom{n}{n} = 1$.
+- **Pascal's recurrence:** $\binom{n}{k} = \binom{n-1}{k-1} + \binom{n-1}{k}$ ($O(n^2)$ table; useful when `mod` is not prime).
+- **Key identities:**
+  - **Subsets:** $\sum_{k=0}^{n} \binom{n}{k} = 2^n$.
+  - **Hockey-stick:** $\sum_{i=k}^{m} \binom{i}{k} = \binom{m+1}{k+1}$.
+  - **Grid rectangles:** an $m \times n$ grid of lines ($m$ horizontal, $n$ vertical) forms $\binom{m}{2}\binom{n}{2} = \frac{m(m-1)n(n-1)}{4}$ rectangles.
+  - **Grid paths:** $(0,0) \to (a,b)$ using unit right/up steps has $\binom{a+b}{a} = \binom{a+b}{b}$ paths.
+
+```python
+from math import comb  # Exact built-in C(n, k) in Python 3.8+
+
+def build_comb_mod(N, MOD):
+    """O(N) precomp -> O(1) modular C(n, k) queries for prime MOD."""
+    fact = [1] * (N + 1)
+    for i in range(1, N + 1): fact[i] = fact[i - 1] * i % MOD
+    inv = [1] * (N + 1)
+    inv[N] = pow(fact[N], MOD - 2, MOD)
+    for i in range(N, 0, -1): inv[i - 1] = inv[i] * i % MOD
+    return lambda n, k: fact[n] * inv[k] % MOD * inv[n - k] % MOD if 0 <= k <= n else 0
+```
+
+### 14.3 Multinomials & Stars and Bars
+
+- **Permutations with duplicates:** $n$ items with counts $n_1, \dots, n_k$ ($\sum n_i = n$) $\implies \binom{n}{n_1, \dots, n_k} = \frac{n!}{n_1! n_2! \cdots n_k!}$.
+- **Stars & Bars:**
+  - Choose $k$ items from $n$ types with repetition: $\binom{n + k - 1}{k}$.
+  - Non-negative integer solutions ($x_i \ge 0$) to $x_1 + \dots + x_k = X$: $\binom{X + k - 1}{k - 1}$.
+  - Positive integer solutions ($x_i \ge 1$) to $x_1 + \dots + x_k = X$: substitute $x'_i = x_i - 1 \implies \binom{X - 1}{k - 1}$.
+- **Min-step grid paths (Hopscotch v3):** $(0,0) \to (N,N)$ where each jump moves right $\ge X$ and up $\ge Y$. Instead of $O(N^4)$ naive DP or $O(N^2)$ 2D prefix sums, sum over $k \in [1, N]$ jumps via Stars & Bars in **$O(N)$**:
+  $$\text{ways} = \sum_{k=1}^{N} \binom{N - kX + k - 1}{k - 1} \binom{N - kY + k - 1}{k - 1} \quad (\text{terms where } N \ge kX, kY)$$
+
+### 14.4 Catalan Numbers
+
+Catalan numbers = number of ways to arrange a structure or kinds of objects
+
+- **Closed form & recurrences:** $C_0 = 1$;
+  $$C_n = \frac{1}{n+1}\binom{2n}{n} = \binom{2n}{n} - \binom{2n}{n-1} = \frac{2(2n-1)}{n+1} C_{n-1} = \sum_{i=0}^{n-1} C_i C_{n-1-i}$$
+- **Recognize Catalan when counting:**
+  1. Monotonic grid paths $(0,0) \to (n,n)$ never crossing the diagonal ($y \le x$).
+  2. Valid parenthesizations of $n+1$ factors (or $n$ pairs of balanced parentheses).
+  3. Triangulations of a convex $(n+2)$-gon.
+  4. Full binary trees with $n+1$ leaves (or rooted binary trees with $n$ nodes).
+  5. Stack-sortable permutations of length $n$.
+
+```python
+def catalan_table(n):
+    """O(n) time & space -> [C_0, ..., C_n]."""
+    C = [1] * (n + 1)
+    for i in range(1, n + 1):
+        C[i] = C[i - 1] * 2 * (2 * i - 1) // (i + 1)
+    return C
+```
+
+### 14.5 Inclusion–Exclusion Principle
+
+- **Union of $n$ sets:** add odd-sized intersections, subtract even-sized intersections ($O(2^n)$ subsets):
+  $$\left\vert{}\bigcup_{i=1}^{n} A_i\right\vert{} = \sum_{\emptyset \neq S \subseteq [n]} (-1)^{\vert{}S\vert{}-1} \left\vert{}\bigcap_{i \in S} A_i\right\vert{}$$
+
+```python
+def inclusion_exclusion(n, intersect_size):
+    """O(2^n): intersect_size(mask) returns |intersection of sets in bitmask|."""
+    ans = 0
+    for mask in range(1, 1 << n):
+        sz = intersect_size(mask)
+        ans += sz if (mask.bit_count() & 1) else -sz
+    return ans
+```
+
+
+Numbers are relatively prime if they share no factors but 1, i.e. gcd(a, b) = 1 <=> a and b are relatively prime.
+Given by Euler's Totient phi(N) = N * prod_PF(1- 1/PF).
 
 ## Quick function index
 
