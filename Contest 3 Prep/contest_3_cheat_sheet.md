@@ -716,7 +716,7 @@ All composites can be written as a factor of primes
 ```python
 def num_PF(n):
     """Count the number of prime factors of n"""
-    primes = get_primes(n)
+    primes = get_primes(isqrt(n)) # only calculate up to sqrt(n) since it's all we use anyway
     PF_idx = 0
     PF = primes[PF_idx]
     ans = 0
