@@ -830,27 +830,3 @@ def inclusion_exclusion(n, intersect_size):
         ans += sz if (mask.bit_count() & 1) else -sz
     return ans
 ```
-
-
-Numbers are relatively prime if they share no factors but 1, i.e. gcd(a, b) = 1 <=> a and b are relatively prime.
-Given by Euler's Totient phi(N) = N * prod_PF(1- 1/PF).
-
-## Quick function index
-
-| Need | Use |
-|---|---|
-| Turn direction / side of a line | `cross(A,B,C)` sign |
-| Triangle or polygon area | `abs(area2(P))/2` |
-| Polygon orientation | sign of `area2(P)` |
-| Convex test | `is_convex(P)` |
-| Point in convex / any polygon | ccw on all edges or area sum / `point_in_polygon` |
-| Segments cross / touch | `proper_intersect` / `seg_intersect` |
-| Line-line intersection | `line_inter_pts` (2 points each) / `line_inter` (`ax+by+c`) |
-| Distance point to line / segment | `pt_line_dist` / `pt_seg_dist` |
-| Incenter / circumcenter | `incenter` / `circumcenter` (radius `R = abc/(4·Area)`, `r = Area/s`) |
-| Line meets circle again | `second_hit` |
-| Circle through 2 points, radius r | `circles_through` |
-| Convex hull | `convex_hull` (monotone chain) or `graham` |
-| Farthest / closest pair | hull + all pairs / `closest_pair_d2` |
-| Union of rectangles | `union_area` |
-| H/V segment intersections | `hv_intersections` |
